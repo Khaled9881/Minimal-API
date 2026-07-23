@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Text.Json;
 
 namespace Minimal_API
 {
@@ -9,36 +10,10 @@ namespace Minimal_API
             var builder = WebApplication.CreateBuilder(args);
             var app = builder.Build();
 
-            List<Product> products = new()
-            {
-                new() {id = 1, name= "tv"},
-                new() {id = 2, name = "Phone"}
-            };
 
-            app.MapGet("/products", async (HttpContext context) =>
-            {
-                string result = string.Join("\n", products.Select(s => s.ToString()));
-
-                return context.Response.WriteAsync(result);
-            });
-
-            app.MapPost("/products", async (HttpContext context, Product product) =>
-            {
-                products.Add(product);
-                return context.Response.WriteAsync("Product Added Successfully");
-            });
+            var mapGp = app.MapGroup("/products").AttachAPI();
 
 
-
-            //app.MapGet("/", async (HttpContext httpContext) =>
-            //{
-            //    await httpContext.Response.WriteAsync("Hello GETt");
-            //});
-
-            //app.MapPost("/", async (HttpContext httpContext) =>
-            //{
-            //    await httpContext.Response.WriteAsync("It is POST");
-            //});
 
             app.Run();
         }
