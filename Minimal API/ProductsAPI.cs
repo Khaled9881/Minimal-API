@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace Minimal_API
@@ -19,12 +20,31 @@ namespace Minimal_API
                 string result = string.Join("\n", products.Select(s => s.ToString()));
 
                 return context.Response.WriteAsync(result);
-            });
+            }).AddEndpointFilter<CustomEnpointFilter>();
 
             builder.MapPost("/", async (HttpContext context, Product product) =>
             {
                 products.Add(product);
                 await context.Response.WriteAsync("Product Added Successfully");
+            }).AddEndpointFilter(async (context, next) =>
+            {
+                var product = context.GetArgument<Product>(1);
+                if (product == null)
+                    return Results.BadRequest("u have to provide product data");
+
+                ValidationContext validationContext = new ValidationContext(product);
+                List<ValidationResult> errors = new();
+                bool isValid = Validator.TryValidateObject(product, validationContext, errors, true);
+
+                if (!isValid)
+                    return Results.BadRequest(errors[0].ErrorMessage);
+
+                var result = await next(context);
+
+                return result;
+
+
+
             });
 
 
@@ -61,18 +81,20 @@ namespace Minimal_API
 
             builder.MapDelete("/{id:int}", async (HttpContext context, int id) =>
             {
-
                 Product? product = products.FirstOrDefault(s => s.id == id);
 
                 if (product == null)
                 {
-                    context.Response.StatusCode = 400;
-                    await context.Response.WriteAsync("Invlaid Product Id");
-                    return;
+                    //context.Response.StatusCode = 400;
+                    //await context.Response.WriteAsync("Invlaid Product Id");
+                    //return;
+
+                    return Results.BadRequest(new { message = "nvlaid Product Id" });
                 }
 
                 products.Remove(product);
-                await context.Response.WriteAsync("Products Deleted Successfully");
+                //await context.Response.WriteAsync("Products Deleted Successfully");
+                return Results.Ok(new { message = "Products Deleted Successfully " });
             });
 
             return builder;

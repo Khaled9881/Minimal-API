@@ -4,8 +4,9 @@ namespace Minimal_API
 {
     public class Product
     {
-        [Required]
+        [Required(ErrorMessage = "u have to provide product id")]
         public int id { get; set; }
+        [Required(ErrorMessage = "product name is required")]
         public string name { get; set; }
 
         public override string ToString()
